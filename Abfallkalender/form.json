@@ -1,0 +1,24 @@
+{
+    "elements":
+    [
+        {"type": "Label", "label": "Müllarten auswählen:" },
+        {"type": "CheckBox", "name": "cbxGS", "caption": "Gelber Sack" },
+        {"type": "CheckBox", "name": "cbxHM", "caption": "Hausmüll"},
+        {"type": "CheckBox", "name": "cbxPP", "caption": "Pappe"},
+
+        {"type": "Label", "label": "Push Notification:"},
+        {"type": "CheckBox", "name": "cbxPush", "caption": "Push Notification aktivieren?"},
+        {"type": "SelectInstance", "name": "PushInstanceID", "caption": "ID für Push Notifications"}
+    ],
+    "actions":
+    [
+        {"type": "Button", "label": "Update", "onClick": "AFK_UpdateWasteTimes($id);"},
+        {"type": "Button", "label": "Demodaten setzen", "onClick": "AFK_SetDemoData($id);"}
+    ],
+    "status":
+    [
+        {"code": 101, "icon": "active", "caption": "Modul ist funktionsfähig. GGf. müssen Demodaten einmalig importiert werden"},
+        {"code": 102, "icon": "active", "caption": "Modul ist funktionsfähig"},
+        {"code": 201, "icon": "error", "caption": "Mindestens eine Termin-Variable ist leer. Bitte diese in den Instance-Settings deaktivieren!"}
+    ]
+}

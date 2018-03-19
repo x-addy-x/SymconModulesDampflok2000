@@ -1,0 +1,14 @@
+{
+    "id": "{5f97bac9-2e8a-40fa-b982-afe5b77707f4}",
+    "name": "Abfallkalender",
+    "type": 3,
+    "vendor": "",
+    "aliases":
+    [
+        "Abfallkalender"
+    ],  
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "AFK"
+}
