@@ -15,6 +15,7 @@ Dieses IP-Symcon-Modul erstellt einen generischen Abfallkalender, bei dem die Da
     * Restmüll
     * Gelber Sack
     * Pappe/Papier
+* Die String-Variablen der Abfuhrtermine können selbstverständlich auch von jedem Skript, welches Abfuhrtermine einer Webseite parsed, automatisch "befüllt" werden. Hierbei ist nur wichtig, dass nach jedem Termin ein "New-Line" folgt.  
 
 ## Voraussetzungen
 * IP-Symcon ab Version 4.2
@@ -34,6 +35,6 @@ Hersteller         | Gerät       |
     * Initiale Erstellung des Moduls
 
 ## To Do's
-- [ ] Option für Biotonne
+- [x] Option für Biotonne
 - [ ] Übersetzung
-- [ ] E-Mail-Benachrichtigung
+- [x] E-Mail-Benachrichtigung

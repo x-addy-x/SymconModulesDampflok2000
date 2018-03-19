@@ -5,10 +5,14 @@
         {"type": "CheckBox", "name": "cbxGS", "caption": "Gelber Sack" },
         {"type": "CheckBox", "name": "cbxHM", "caption": "Hausmüll"},
         {"type": "CheckBox", "name": "cbxPP", "caption": "Pappe"},
+        {"type": "CheckBox", "name": "cbxBO", "caption": "Bio"},
 
         {"type": "Label", "label": "Push Notification:"},
         {"type": "CheckBox", "name": "cbxPush", "caption": "Push Notification aktivieren?"},
-        {"type": "SelectInstance", "name": "PushInstanceID", "caption": "ID für Push Notifications"}
+        {"type": "SelectInstance", "name": "PushInstanceID", "caption": "ID für Push Notifications"},
+        {"type": "Label", "label": "E-Mail Notification:"},
+        {"type": "CheckBox", "name": "cbxMail", "caption": "E-Mail Notification aktivieren?"},
+        {"type": "SelectInstance", "name": "MailInstanceID", "caption": "ID für E-Mail Notifications"}
     ],
     "actions":
     [

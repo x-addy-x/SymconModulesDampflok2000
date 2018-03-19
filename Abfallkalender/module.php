@@ -15,10 +15,12 @@
 			$this->RegisterPropertyBoolean("cbxGS", true);
             $this->RegisterPropertyBoolean("cbxHM", true);
             $this->RegisterPropertyBoolean("cbxPP", true);
-            //$this->RegisterPropertyBoolean("cbxBO", false);
+            $this->RegisterPropertyBoolean("cbxBO", false);
             $this->RegisterVariableString("RestTimesHTML", "Abfalltermine", "~HTMLBox");
             $this->RegisterPropertyBoolean("cbxPush", false);
+            $this->RegisterPropertyBoolean("cbxMail", false);
             $this->RegisterPropertyInteger("PushInstanceID", 0);
+            $this->RegisterPropertyInteger("MailInstanceID", 0);
 
             //Activate timers
             $this->RegisterCyclicTimer("UpdateTimer", 0, 1, 7, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
@@ -83,16 +85,17 @@
             {
                 $this->UnregisterVariable("PaperTimes");
             }
-            /*
+
             If ($this->ReadPropertyBoolean("cbxBO"))
             {
-                $this->RegisterVariableString("BioTimes", "Biomüll", "~TextBox");
+                $BioTimesID = $this->RegisterVariableString("BioTimes", "Biomüll", "~TextBox");
+                IPS_SetVariableCustomAction($BioTimesID, $AScriptID);
             }
             Else
             {
                 $this->UnregisterVariable("BioTimes");
             }
-            */
+
         }
 
         public function UpdateWasteTimes()
@@ -104,7 +107,9 @@
             $this->SendDebug($ModulName, "Starting updates of waste times." , 0);
             //Settings-Variablen:
             $PushInstanceID = $this->ReadPropertyInteger("PushInstanceID");
+            $MailInstanceID = $this->ReadPropertyInteger("MailInstanceID");
             $PushIsActive = $this->ReadPropertyBoolean("cbxPush");
+            $MailIsActive = $this->ReadPropertyBoolean("cbxMail");
             $TimerIDForPush = $this->GetIDForIdent("NotificationTimer");
             $AbfallTermineHTMLID = IPS_GetObjectIDByIdent("RestTimesHTML", $this->InstanceID);
             
@@ -133,6 +138,7 @@
                 If ($TimerTriggerID <> $TimerIDForPush)
                 {
                     $PushIsActive = false;
+                    $MailIsActive = false;
                 }
             }
 
@@ -140,11 +146,12 @@
             $strGS = @GetValueString(IPS_GetObjectIDByIdent("YellowBagTimes", $this->InstanceID));
             $strHM = @GetValueString(IPS_GetObjectIDByIdent("WasteTimes", $this->InstanceID));
             $strPP = @GetValueString(IPS_GetObjectIDByIdent("PaperTimes", $this->InstanceID));
+            $strBO = @GetValueString(IPS_GetObjectIDByIdent("BioTimes", $this->InstanceID));
             
-            If ((empty($strGS) && $this->ReadPropertyBoolean("cbxGS")) || (empty($strHM) && $this->ReadPropertyBoolean("cbxHM")) || (empty($strPP)) && $this->ReadPropertyBoolean("cbxPP"))
+            If ((empty($strGS) && $this->ReadPropertyBoolean("cbxGS")) || (empty($strHM) && $this->ReadPropertyBoolean("cbxHM")) || (empty($strPP)) && $this->ReadPropertyBoolean("cbxPP") || (empty($strBO)) && $this->ReadPropertyBoolean("cbxBO"))
             {
                 $this->SetStatus(201);
-                $this->SendDebug($ModulName, "One or more of the wate time stings are empty!", 0);
+                $this->SendDebug($ModulName, "One or more of the waste time stings are empty!", 0);
                 exit;
             }
 
@@ -167,6 +174,10 @@
                 $arrPP = explode("\n", $strPP);
                 $nextTermine['Pappe'] = closest($arrPP, new DateTime('today midnight'));
             }
+            If ($this->ReadPropertyBoolean("cbxBO")) {
+                $arrBO = explode("\n", $strBO);
+                $nextTermine['Bio'] = closest($arrBO, new DateTime('today midnight'));
+            }
             
             asort($nextTermine);
             
@@ -183,6 +194,11 @@
                     {
                         $this->SendDebug($ModulName, "Push notification is sending now.", 0);
                         WFC_PushNotification($PushInstanceID, $ModulName, "Morgen wird ".$key." abgeholt!", "", 0);
+                    }
+                    If ($MailIsActive)
+                    {
+                        $this->SendDebug($ModulName, "Mail notification is sending now.", 0);
+                        SMTP_SendMail($MailInstanceID, $ModulName, "Morgen wird ".$key." abgeholt!");
                     }
                 }
                 ElseIf ($days == 0)
@@ -203,6 +219,7 @@
             $varGSID = IPS_GetObjectIDByIdent("YellowBagTimes", $this->InstanceID);
             $varHMID = IPS_GetObjectIDByIdent("WasteTimes", $this->InstanceID);
             $varPPID = IPS_GetObjectIDByIdent("PaperTimes", $this->InstanceID);
+            $varBOID = IPS_GetObjectIDByIdent("BioTimes", $this->InstanceID);
 
             $bolVarGS = SetValueString($varGSID,
             "04.01.2018\n17.01.2018\n31.01.2018\n14.02.2018\n28.02.2018\n14.03.2018\n28.03.2018\n11.04.2018\n25.04.2018\n09.05.2018\n24.05.2018\n06.06.2018\n20.06.2018\n04.07.2018\n18.07.2018\n01.08.2018\n15.08.2018\n29.08.2018\n12.09.2018\n26.09.2018\n10.10.2018\n24.10.2018\n07.11.2018\n21.11.2018\n05.12.2018\n19.12.2018");
@@ -213,7 +230,10 @@
             $bolVarPP = SetValueString($varPPID,
             "24.01.2018\n21.02.2018\n21.03.2018\n18.04.2018\n16.05.2018\n13.06.2018\n11.07.2018\n08.08.2018\n05.09.2018\n04.10.2018\n01.11.2018\n28.11.2018\n27.12.2018");
 
-            If ($bolVarGS && $bolVarHM && $bolVarPP)
+            $bolVarBO = SetValueString($varBOID,
+            "25.01.2018\n22.02.2018\n22.03.2018\n19.04.2018\n17.05.2018\n14.06.2018\n11.07.2018\n09.08.2018\n06.09.2018\n04.10.2018\n01.11.2018\n27.11.2018\n27.12.2018");
+
+            If ($bolVarGS && $bolVarHM && $bolVarPP && $bolVarBO)
             {
                 echo "Demodaten wurden erfolgreich hinterlegt.";
             }
