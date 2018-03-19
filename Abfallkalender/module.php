@@ -23,18 +23,6 @@
             $this->RegisterPropertyInteger("MailInstanceID", 0);
 
             //Activate timers
-            $eid1 = $this->RegisterTimer("UpdateTimer", 0, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
-            $eid2 = $this->RegisterTimer("NotificationTimer", 0, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
-
-            //IPS_SetEventCyclicTimeFrom($eid1, $hour, $minute, $second);
-            IPS_SetEventCyclicTimeFrom($eid1, 0, 1, 7);
-            IPS_SetEventCyclicTimeFrom($eid2, 19, 50, 7);
-            IPS_SetEventCyclic($eId1, 2, 0, 0, 0, 0, 0);
-            IPS_SetEventActive($eId1, true);
-            IPS_SetEventCyclic($eId2, 2, 0, 0, 0, 0, 0);
-            IPS_SetEventActive($eId2, true);
-
-            /*
             $this->RegisterCyclicTimer("UpdateTimer", 0, 1, 7, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
             $this->RegisterCyclicTimer("NotificationTimer", 19, 50, 7, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
             //$this->RegisterTimer("UpdateTimer1", 0,'AFK_UpdateWasteTimes('.$this->InstanceID.');');
@@ -44,13 +32,18 @@
             IPS_SetEventActive($eId1, true);
             IPS_SetEventCyclic($eId2, 2, 0, 0, 0, 0, 0);
             IPS_SetEventActive($eId2, true);
-             */
 		}
 
         public function ApplyChanges() {
 
             //Never delete this line!
             parent::ApplyChanges();
+
+            //$ModulInfo = IPS_GetInstance($this->InstanceID);
+            //$ModulName = $ModulInfo['ModuleInfo']['ModuleName'];
+            
+            //$AScriptID = $this->ReadPropertyInteger("AScriptID");
+            //$this->SendDebug($ModulName, "ASCriptID:".$AScriptID , 0);
 
             If ($this->ReadPropertyBoolean("cbxGS"))
             {
@@ -251,7 +244,6 @@
          * @param  integer $second Second of the timer.
          * @param  string $script Script content of the timer.
          */
-        /*
         protected function RegisterCyclicTimer($ident, $hour, $minute, $second, $script)
         {
             $id = @$this->GetIDForIdent($ident);
@@ -277,7 +269,6 @@
             IPS_SetEventCyclicTimeFrom($id, $hour, $minute, $second);
             IPS_SetEventActive($id, false);
         }
-        */
         
     }
 ?>
