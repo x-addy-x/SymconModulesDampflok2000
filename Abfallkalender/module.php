@@ -25,26 +25,13 @@
             //Activate timers
             $this->RegisterCyclicTimer("UpdateTimer", 0, 1, 7, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
             $this->RegisterCyclicTimer("NotificationTimer", 19, 50, 7, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
+            //$this->RegisterTimer("UpdateTimer1", 0,'AFK_UpdateWasteTimes('.$this->InstanceID.');');
             $eId1 = IPS_GetEventIDByName("UpdateTimer", $this->InstanceID);
             $eId2 = IPS_GetEventIDByName("NotificationTimer", $this->InstanceID);
             IPS_SetEventCyclic($eId1, 2, 0, 0, 0, 0, 0);
             IPS_SetEventActive($eId1, true);
             IPS_SetEventCyclic($eId2, 2, 0, 0, 0, 0, 0);
             IPS_SetEventActive($eId2, true);
-
-            //ActionScript erstellen und umbenennen
-            $AScriptName = "AScriptWasteTimes";
-            $AScriptID = $this->RegisterScript($AScriptName, $AScriptName, '<?'."\n\t".'SetValue($_IPS[\'VARIABLE\'], $_IPS[\'VALUE\']);'."\n".'?>');
-            IPS_SetName($AScriptID, $AScriptName);
-            IPS_SetParent($AScriptID, $this->InstanceID);
-            $AScript = IPS_GetScript($AScriptID);
-            //Datei umbenennen in $AScriptName
-            rename(IPS_GetKernelDir().'/scripts/'.$AScript['ScriptFile'], IPS_GetKernelDir().'/scripts/'.$AScriptName.'.ips.php');
-            //Dem Skript den neuen Dateinamen ($AScriptName.'.ips.php') zuweisen
-            IPS_SetScriptFile($AScriptID, $AScriptName.'.ips.php');
-            //IPS_SetVariableCustomAction($AbfallTermineHTMLID, $AScriptID);
-            $this->RegisterPropertyInteger("AScriptID", $AScriptID);
-            IPS_SetHidden($AScriptID, true);
 		}
 
         public function ApplyChanges() {
@@ -52,16 +39,16 @@
             //Never delete this line!
             parent::ApplyChanges();
 
-            $ModulInfo = IPS_GetInstance($this->InstanceID);
-            $ModulName = $ModulInfo['ModuleInfo']['ModuleName'];
+            //$ModulInfo = IPS_GetInstance($this->InstanceID);
+            //$ModulName = $ModulInfo['ModuleInfo']['ModuleName'];
             
-            $AScriptID = $this->ReadPropertyInteger("AScriptID");
-            $this->SendDebug($ModulName, "ASCriptID:".$AScriptID , 0);
+            //$AScriptID = $this->ReadPropertyInteger("AScriptID");
+            //$this->SendDebug($ModulName, "ASCriptID:".$AScriptID , 0);
 
             If ($this->ReadPropertyBoolean("cbxGS"))
             {
-                $YellowBagTimesID = $this->RegisterVariableString("YellowBagTimes", "Gelber Sack", "~TextBox");
-                IPS_SetVariableCustomAction($YellowBagTimesID, $AScriptID);
+                $this->RegisterVariableString("YellowBagTimes", "Gelber Sack", "~TextBox");
+                $this->EnableAction("YellowBagTimes");
             }
             Else
             {
@@ -69,8 +56,8 @@
             }
             If ($this->ReadPropertyBoolean("cbxHM"))
             {
-                $WasteTimesID = $this->RegisterVariableString("WasteTimes", "Hausmüll", "~TextBox");
-                IPS_SetVariableCustomAction($WasteTimesID, $AScriptID);
+                $this->RegisterVariableString("WasteTimes", "Hausmüll", "~TextBox");
+                $this->EnableAction("WasteTimes");
             }
             Else
             {
@@ -78,8 +65,8 @@
             }
             If ($this->ReadPropertyBoolean("cbxPP"))
             {
-                $PaperTimesID = $this->RegisterVariableString("PaperTimes", "Pappe", "~TextBox");
-                IPS_SetVariableCustomAction($PaperTimesID, $AScriptID);
+                $this->RegisterVariableString("PaperTimes", "Pappe", "~TextBox");
+                $this->EnableAction("PaperTimes");
             }
             Else
             {
@@ -88,14 +75,19 @@
 
             If ($this->ReadPropertyBoolean("cbxBO"))
             {
-                $BioTimesID = $this->RegisterVariableString("BioTimes", "Biomüll", "~TextBox");
-                IPS_SetVariableCustomAction($BioTimesID, $AScriptID);
+                $this->RegisterVariableString("BioTimes", "Biomüll", "~TextBox");
+                $this->EnableAction("BioTimes");
             }
             Else
             {
                 $this->UnregisterVariable("BioTimes");
             }
 
+        }
+
+        public function RequestAction($Ident, $Value)
+        {
+            SetValue($this->GetIDForIdent($Ident), $Value);
         }
 
         public function UpdateWasteTimes()
