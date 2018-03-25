@@ -17,21 +17,18 @@
             $this->RegisterPropertyBoolean("cbxPP", true);
             $this->RegisterPropertyBoolean("cbxBO", false);
             $this->RegisterVariableString("RestTimesHTML", "Abfalltermine", "~HTMLBox");
-            $this->RegisterPropertyBoolean("cbxPush", false);
-            $this->RegisterPropertyBoolean("cbxMail", false);
+
             $this->RegisterPropertyInteger("PushInstanceID", 0);
             $this->RegisterPropertyInteger("MailInstanceID", 0);
 
-            //Activate timers
-            $this->RegisterCyclicTimer("UpdateTimer", 0, 1, 7, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
-            $this->RegisterCyclicTimer("NotificationTimer", 19, 50, 7, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
-            //$this->RegisterTimer("UpdateTimer1", 0,'AFK_UpdateWasteTimes('.$this->InstanceID.');');
-            $eId1 = IPS_GetEventIDByName("UpdateTimer", $this->InstanceID);
-            $eId2 = IPS_GetEventIDByName("NotificationTimer", $this->InstanceID);
-            IPS_SetEventCyclic($eId1, 2, 0, 0, 0, 0, 0);
-            IPS_SetEventActive($eId1, true);
-            IPS_SetEventCyclic($eId2, 2, 0, 0, 0, 0, 0);
-            IPS_SetEventActive($eId2, true);
+            $this->RegisterPropertyInteger("IntervalUpdateTimer", 0);
+            $this->RegisterPropertyInteger("IntervalNotificationTimer", 19);
+            $this->RegisterPropertyInteger("IntervalUpdateTimerMinute", 1);
+            $this->RegisterPropertyInteger("IntervalNotificationTimerMinute", 50);
+
+            //Create timers
+            $this->RegisterTimer("UpdateTimer", 0, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
+            $this->RegisterTimer("NotificationTimer", 0, 'AFK_UpdateWasteTimes('.$this->InstanceID.');');
 		}
 
         public function ApplyChanges() {
@@ -39,11 +36,24 @@
             //Never delete this line!
             parent::ApplyChanges();
 
-            //$ModulInfo = IPS_GetInstance($this->InstanceID);
-            //$ModulName = $ModulInfo['ModuleInfo']['ModuleName'];
-            
-            //$AScriptID = $this->ReadPropertyInteger("AScriptID");
-            //$this->SendDebug($ModulName, "ASCriptID:".$AScriptID , 0);
+            $ModulInfo = IPS_GetInstance($this->InstanceID);
+            $ModulName = $ModulInfo['ModuleInfo']['ModuleName'];
+
+            $HourUpdateTimer = $this->ReadPropertyInteger("IntervalUpdateTimer");
+            $HourNotificationTimer = $this->ReadPropertyInteger("IntervalNotificationTimer");
+            $MinuteUpdateTimer = $this->ReadPropertyInteger("IntervalUpdateTimerMinute");
+            $MinuteNotificationTimer = $this->ReadPropertyInteger("IntervalNotificationTimerMinute");
+            If ((($HourUpdateTimer > 23) || ($HourNotificationTimer > 23)) || (($HourUpdateTimer < 0) || ($HourNotificationTimer < 0)))
+            {
+                $this->SetStatus(202);
+                $this->SendDebug($ModulName, "The hour of a time is wrong!", 0);
+            }
+            else {
+                $this->SetStatus(102);
+            }
+
+            $this->SetNewTimerInterval($HourUpdateTimer.":".$MinuteUpdateTimer.":17", "UpdateTimer");
+            $this->SetNewTimerInterval($HourUpdateTimer.":".$MinuteNotificationTimer.":07", "NotificationTimer");
 
             If ($this->ReadPropertyBoolean("cbxGS"))
             {
@@ -82,27 +92,42 @@
             {
                 $this->UnregisterVariable("BioTimes");
             }
-
         }
 
+        //Funktion für die Standardaktionen
         public function RequestAction($Ident, $Value)
         {
             SetValue($this->GetIDForIdent($Ident), $Value);
         }
 
+        //Mülldaten aktualisieren
         public function UpdateWasteTimes()
         {
             $this->SetStatus(102);
             $ModulInfo = IPS_GetInstance($this->InstanceID);
             $ModulName = $ModulInfo['ModuleInfo']['ModuleName'];
 
+            $HourUpdateTimer = $this->ReadPropertyInteger("IntervalUpdateTimer");
+            $HourNotificationTimer = $this->ReadPropertyInteger("IntervalNotificationTimer");
+            $MinuteUpdateTimer = $this->ReadPropertyInteger("IntervalUpdateTimerMinute");
+            $MinuteNotificationTimer = $this->ReadPropertyInteger("IntervalNotificationTimerMinute");
+
             $this->SendDebug($ModulName, "Starting updates of waste times." , 0);
             //Settings-Variablen:
             $PushInstanceID = $this->ReadPropertyInteger("PushInstanceID");
             $MailInstanceID = $this->ReadPropertyInteger("MailInstanceID");
-            $PushIsActive = $this->ReadPropertyBoolean("cbxPush");
-            $MailIsActive = $this->ReadPropertyBoolean("cbxMail");
-            $TimerIDForPush = $this->GetIDForIdent("NotificationTimer");
+            if ($this->ReadPropertyInteger("PushInstanceID") > 0) {
+                $PushIsActive = true;
+            }
+            else {
+                $PushIsActive = false;
+            }
+            if ($this->ReadPropertyInteger("MailInstanceID") > 0) {
+                $MailIsActive = true;
+            }
+            else {
+                $MailIsActive = false;
+            }
             $AbfallTermineHTMLID = IPS_GetObjectIDByIdent("RestTimesHTML", $this->InstanceID);
             
             function closest($dates, $findate)
@@ -125,9 +150,8 @@
             //Check if NotificationTimer was triggered:
             If ($_IPS['SENDER'] == "TimerEvent")
             {
-                $this->SendDebug($ModulName, "EventID ". $_IPS['EVENT'] . " has triggered.", 0);
-                $TimerTriggerID = $_IPS['EVENT'];
-                If ($TimerTriggerID <> $TimerIDForPush)
+                $ActualHour = date('H');
+                If ($HourNotificationTimer <> (int)$ActualHour)
                 {
                     $PushIsActive = false;
                     $MailIsActive = false;
@@ -143,7 +167,7 @@
             If ((empty($strGS) && $this->ReadPropertyBoolean("cbxGS")) || (empty($strHM) && $this->ReadPropertyBoolean("cbxHM")) || (empty($strPP)) && $this->ReadPropertyBoolean("cbxPP") || (empty($strBO)) && $this->ReadPropertyBoolean("cbxBO"))
             {
                 $this->SetStatus(201);
-                $this->SendDebug($ModulName, "One or more of the waste time stings are empty!", 0);
+                $this->SendDebug($ModulName, "One or more of the waste time strings are empty!", 0);
                 exit;
             }
 
@@ -204,71 +228,68 @@
             }
             $HTMLBox.= "</table>";
             SetValueString($AbfallTermineHTMLID, $HTMLBox);
+
+            sleep(1);
+            $this->SendDebug($ModulName, "Next update time: ".$HourUpdateTimer.":".$MinuteUpdateTimer, 0);
+            $this->SendDebug($ModulName, "Next notification time: ".$HourNotificationTimer.":".$MinuteNotificationTimer, 0);
+            $this->SetNewTimerInterval($HourUpdateTimer.":".$MinuteUpdateTimer.":17", "UpdateTimer");
+            $this->SetNewTimerInterval($HourNotificationTimer.":".$MinuteNotificationTimer.":07", "NotificationTimer");
         }
 
+        //Demodaten setzen
         public function SetDemoData()
         {
-            $varGSID = IPS_GetObjectIDByIdent("YellowBagTimes", $this->InstanceID);
-            $varHMID = IPS_GetObjectIDByIdent("WasteTimes", $this->InstanceID);
-            $varPPID = IPS_GetObjectIDByIdent("PaperTimes", $this->InstanceID);
-            $varBOID = IPS_GetObjectIDByIdent("BioTimes", $this->InstanceID);
-
-            $bolVarGS = SetValueString($varGSID,
-            "04.01.2018\n17.01.2018\n31.01.2018\n14.02.2018\n28.02.2018\n14.03.2018\n28.03.2018\n11.04.2018\n25.04.2018\n09.05.2018\n24.05.2018\n06.06.2018\n20.06.2018\n04.07.2018\n18.07.2018\n01.08.2018\n15.08.2018\n29.08.2018\n12.09.2018\n26.09.2018\n10.10.2018\n24.10.2018\n07.11.2018\n21.11.2018\n05.12.2018\n19.12.2018");
-
-            $bolVarHM = SetValueString($varHMID,
-            "03.01.2018\n16.01.2018\n30.01.2018\n13.02.2018\n27.02.2018\n13.03.2018\n27.03.2018\n10.04.2018\n24.04.2018\n08.05.2018\n23.05.2018\n05.06.2018\n19.06.2018\n03.07.2018\n17.07.2018\n31.07.2018\n14.08.2018\n28.08.2018\n11.09.2018\n25.09.2018\n09.10.2018\n23.10.2018\n06.11.2018\n20.11.2018\n04.12.2018\n18.12.2018");
-
-            $bolVarPP = SetValueString($varPPID,
-            "24.01.2018\n21.02.2018\n21.03.2018\n18.04.2018\n16.05.2018\n13.06.2018\n11.07.2018\n08.08.2018\n05.09.2018\n04.10.2018\n01.11.2018\n28.11.2018\n27.12.2018");
-
-            $bolVarBO = SetValueString($varBOID,
-            "25.01.2018\n22.02.2018\n22.03.2018\n19.04.2018\n17.05.2018\n14.06.2018\n11.07.2018\n09.08.2018\n06.09.2018\n04.10.2018\n01.11.2018\n27.11.2018\n27.12.2018");
-
-            If ($bolVarGS && $bolVarHM && $bolVarPP && $bolVarBO)
-            {
-                echo "Demodaten wurden erfolgreich hinterlegt.";
+            If ($this->ReadPropertyBoolean("cbxGS")) {
+                $varGSID = IPS_GetObjectIDByIdent("YellowBagTimes", $this->InstanceID);
+                SetValueString($varGSID,
+                "04.01.2018\n17.01.2018\n31.01.2018\n14.02.2018\n28.02.2018\n14.03.2018\n28.03.2018\n11.04.2018\n25.04.2018\n09.05.2018\n24.05.2018\n06.06.2018\n20.06.2018\n04.07.2018\n18.07.2018\n01.08.2018\n15.08.2018\n29.08.2018\n12.09.2018\n26.09.2018\n10.10.2018\n24.10.2018\n07.11.2018\n21.11.2018\n05.12.2018\n19.12.2018");
             }
-            else {
-                echo "Demodaten konnten nicht erfolgreich hinterlegt werden!";
+            If ($this->ReadPropertyBoolean("cbxHM")) {
+                $varHMID = IPS_GetObjectIDByIdent("WasteTimes", $this->InstanceID);
+                $bolVarHM = SetValueString($varHMID,
+                "03.01.2018\n16.01.2018\n30.01.2018\n13.02.2018\n27.02.2018\n13.03.2018\n27.03.2018\n10.04.2018\n24.04.2018\n08.05.2018\n23.05.2018\n05.06.2018\n19.06.2018\n03.07.2018\n17.07.2018\n31.07.2018\n14.08.2018\n28.08.2018\n11.09.2018\n25.09.2018\n09.10.2018\n23.10.2018\n06.11.2018\n20.11.2018\n04.12.2018\n18.12.2018");
             }
+            If ($this->ReadPropertyBoolean("cbxPP")) {
+                $varPPID = IPS_GetObjectIDByIdent("PaperTimes", $this->InstanceID);
+                $bolVarPP = SetValueString($varPPID,
+                "24.01.2018\n21.02.2018\n21.03.2018\n18.04.2018\n16.05.2018\n13.06.2018\n11.07.2018\n08.08.2018\n05.09.2018\n04.10.2018\n01.11.2018\n28.11.2018\n27.12.2018");
+            }
+            If ($this->ReadPropertyBoolean("cbxBO")) {
+                $varBOID = IPS_GetObjectIDByIdent("BioTimes", $this->InstanceID);
+                $bolVarBO = SetValueString($varBOID,
+                "25.01.2018\n22.02.2018\n22.03.2018\n19.04.2018\n17.05.2018\n14.06.2018\n11.07.2018\n09.08.2018\n06.09.2018\n04.10.2018\n01.11.2018\n27.11.2018\n27.12.2018");
+            }
+            echo "Demodaten wurden erfolgreich hinterlegt.";
+            $this->SetStatus(102);
         }
-        
+
         /**
-         * Create a cyclic timer.
+         * Create a timer interval.
          *
          * @access protected
-         * @param  string $ident Name and Ident of the timer.
-         * @param  integer $hour Hour of the timer.
-         * @param  integer $minute Minute of the timer.
-         * @param  integer $second Second of the timer.
-         * @param  string $script Script content of the timer.
+         * @param  string $nextTime String for the next time to set.
+         * @param  string $TimerName Name of timer to update.
          */
-        protected function RegisterCyclicTimer($ident, $hour, $minute, $second, $script)
+        protected function SetNewTimerInterval($nextTime, $TimerName)
         {
-            $id = @$this->GetIDForIdent($ident);
-            $name = $ident;
-            if ($id && IPS_GetEvent($id)['EventType'] <> 1)
+            $ModulInfo = IPS_GetInstance($this->InstanceID);
+            $ModulName = $ModulInfo['ModuleInfo']['ModuleName'];
+
+            $now = time();
+            $today = date("Y-m-d");
+            $nextTimerInterval = strtotime($today.$nextTime);
+            $calTime = $nextTimerInterval - $now;
+            If ($calTime > 0)
             {
-            IPS_DeleteEvent($id);
-            $id = 0;
+                $this->SetTimerInterval($TimerName, $calTime * 1000);
+                $this->SendDebug($ModulName, "Next milliseconds for Timer " . $TimerName . " is " . $calTime . ".", 0);
             }
-            if (!$id)
+            Else
             {
-            $id = IPS_CreateEvent(1);
-            IPS_SetParent($id, $this->InstanceID);
-            IPS_SetIdent($id, $ident);
+                $calTime = strtotime("+1 day " . $nextTime);
+                $this->SetTimerInterval($TimerName, (($calTime - $now) * 1000));
+                $this->SendDebug($ModulName, "Next milliseconds for timer " . $TimerName . " is " . (($calTime - $now) * 1000), 0);
             }
-            IPS_SetName($id, $name);
-
-            IPS_SetEventScript($id, $script);
-
-            if (!IPS_EventExists($id)) throw new Exception("Ident with name $ident is used for wrong object type");
-
-            //IPS_SetEventCyclic($id, 0, 0, 0, 0, 0, 0);
-            IPS_SetEventCyclicTimeFrom($id, $hour, $minute, $second);
-            IPS_SetEventActive($id, false);
         }
-        
     }
 ?>

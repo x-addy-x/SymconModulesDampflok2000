@@ -8,21 +8,27 @@
         {"type": "CheckBox", "name": "cbxBO", "caption": "Bio"},
 
         {"type": "Label", "label": "Push Notification:"},
-        {"type": "CheckBox", "name": "cbxPush", "caption": "Push Notification aktivieren?"},
         {"type": "SelectInstance", "name": "PushInstanceID", "caption": "ID für Push Notifications"},
         {"type": "Label", "label": "E-Mail Notification:"},
-        {"type": "CheckBox", "name": "cbxMail", "caption": "E-Mail Notification aktivieren?"},
-        {"type": "SelectInstance", "name": "MailInstanceID", "caption": "ID für E-Mail Notifications"}
+        {"type": "SelectInstance", "name": "MailInstanceID", "caption": "ID für E-Mail Notifications"},
+
+        {"type": "Label", "label": "Angabe der Stunde für Update-Timer"},
+        {"type": "IntervalBox", "name": "IntervalUpdateTimer", "caption": "Stunde"},
+        {"type": "IntervalBox", "name": "IntervalUpdateTimerMinute", "caption": "Minute"},
+        {"type": "Label", "label": "Angabe der Stunde für Notification-Timer"},
+        {"type": "IntervalBox", "name": "IntervalNotificationTimer", "caption": "Stunde"},
+        {"type": "IntervalBox", "name": "IntervalNotificationTimerMinute", "caption": "Minute"}
     ],
     "actions":
     [
-        {"type": "Button", "label": "Update", "onClick": "AFK_UpdateWasteTimes($id);"},
+        {"type": "Button", "label": "Update Abfuhrtermine", "onClick": "AFK_UpdateWasteTimes($id);"},
         {"type": "Button", "label": "Demodaten setzen", "onClick": "AFK_SetDemoData($id);"}
     ],
     "status":
     [
         {"code": 101, "icon": "active", "caption": "Modul ist funktionsfähig. GGf. müssen Demodaten einmalig importiert werden"},
         {"code": 102, "icon": "active", "caption": "Modul ist funktionsfähig"},
-        {"code": 201, "icon": "error", "caption": "Mindestens eine Termin-Variable ist leer. Bitte diese in den Instance-Settings deaktivieren!"}
+        {"code": 201, "icon": "error", "caption": "Mindestens eine Termin-Variable ist leer. Bitte diese in den Instance-Settings deaktivieren!"},
+        {"code": 202, "icon": "error", "caption": "Die Angabe der Stunde für die Timer müssen im Bereich zwischen 0-23 gesetzt sein!"}
     ]
 }
