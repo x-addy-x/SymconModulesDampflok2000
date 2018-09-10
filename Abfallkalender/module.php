@@ -16,7 +16,7 @@
             $this->RegisterPropertyBoolean("cbxHM", true);
             $this->RegisterPropertyBoolean("cbxPP", true);
             $this->RegisterPropertyBoolean("cbxBO", false);
-            $this->RegisterVariableString("RestTimesHTML", "Abfalltermine", "~HTMLBox");
+            $this->RegisterVariableString("RestTimesHTML", "Termine", "~HTMLBox");
 
             $this->RegisterPropertyInteger("PushInstanceID", 0);
             $this->RegisterPropertyInteger("MailInstanceID", 0);
@@ -66,7 +66,7 @@
             }
             If ($this->ReadPropertyBoolean("cbxHM"))
             {
-                $this->RegisterVariableString("WasteTimes", "Hausmüll", "~TextBox");
+                $this->RegisterVariableString("WasteTimes", "Restmüll", "~TextBox");
                 $this->EnableAction("WasteTimes");
             }
             Else
@@ -75,7 +75,7 @@
             }
             If ($this->ReadPropertyBoolean("cbxPP"))
             {
-                $this->RegisterVariableString("PaperTimes", "Pappe", "~TextBox");
+                $this->RegisterVariableString("PaperTimes", "Wertstoff", "~TextBox");
                 $this->EnableAction("PaperTimes");
             }
             Else
@@ -184,11 +184,11 @@
             }
             If ($this->ReadPropertyBoolean("cbxHM")) {
                 $arrHM = explode("\n", $strHM);
-                $nextTermine['Hausmüll'] = closest($arrHM, new DateTime('today midnight'));
+                $nextTermine['Restmüll'] = closest($arrHM, new DateTime('today midnight'));
             }
             If ($this->ReadPropertyBoolean("cbxPP")) {
                 $arrPP = explode("\n", $strPP);
-                $nextTermine['Pappe'] = closest($arrPP, new DateTime('today midnight'));
+                $nextTermine['Wertsoff'] = closest($arrPP, new DateTime('today midnight'));
             }
             If ($this->ReadPropertyBoolean("cbxBO")) {
                 $arrBO = explode("\n", $strBO);
