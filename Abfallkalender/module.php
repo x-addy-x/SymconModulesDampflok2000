@@ -188,7 +188,7 @@
             }
             If ($this->ReadPropertyBoolean("cbxPP")) {
                 $arrPP = explode("\n", $strPP);
-                $nextTermine['Wertsoff'] = closest($arrPP, new DateTime('today midnight'));
+                $nextTermine['Wertstoff'] = closest($arrPP, new DateTime('today midnight'));
             }
             If ($this->ReadPropertyBoolean("cbxBO")) {
                 $arrBO = explode("\n", $strBO);
